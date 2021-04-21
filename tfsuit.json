@@ -5,7 +5,7 @@
       "exact": null,
       "ignore": {
         "match_pattern": null,
-        "exact": []
+        "exact": null
       }
     },
     "line_breaks": {
