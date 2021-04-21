@@ -167,6 +167,7 @@ resource "aws_wafregional_web_acl" "waf_acl" {
 }
 
 resource "aws_wafregional_web_acl_association" "this" {
+  provider     = aws.virginia
   resource_arn = aws_api_gateway_rest_api.this.arn
   web_acl_id   = aws_wafregional_web_acl.waf_acl.id
 }
