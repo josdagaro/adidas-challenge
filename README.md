@@ -1,2 +1,2 @@
-# adidas-challenge
-Adidas challenge
+# adidas-challenge-iac
+Adidas challenge IaC
