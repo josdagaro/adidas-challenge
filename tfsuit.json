@@ -1,11 +1,11 @@
 {
   "vars": {
     "naming_conventions": {
-      "match_pattern": "[a-z0-9_]+",
+      "match_pattern": "[a-z0-9_\"]+",
       "exact": null,
       "ignore": {
         "match_pattern": null,
-        "exact": []
+        "exact": null
       }
     },
     "line_breaks": {
