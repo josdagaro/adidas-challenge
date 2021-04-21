@@ -116,3 +116,52 @@ resource "aws_api_gateway_usage_plan_key" "main" {
   key_type      = "API_KEY"
   usage_plan_id = aws_api_gateway_usage_plan.this.id
 }
+
+resource "aws_waf_geo_match_set" "geo_match_set" {
+  provider = aws.virginia
+  name     = "geo_match_set"
+
+  geo_match_constraint {
+    type  = "Country"
+    value = "CO"
+  }
+}
+
+resource "aws_waf_rule" "wafrule" {
+  provider    = aws.virginia
+  depends_on  = [aws_waf_geo_match_set.geo_match_set]
+  name        = "tfWAFRule"
+  metric_name = "tfWAFRule"
+
+  predicates {
+    data_id = aws_waf_geo_match_set.geo_match_set.id
+    negated = false
+    type    = "GeoMatch"
+  }
+}
+
+resource "aws_waf_web_acl" "waf_acl" {
+  provider = aws.virginia
+
+  depends_on = [
+    aws_waf_geo_match_set.geo_match_set,
+    aws_waf_rule.wafrule,
+  ]
+
+  name        = "tfWebACL"
+  metric_name = "tfWebACL"
+
+  default_action {
+    type = "BLOCK"
+  }
+
+  rules {
+    action {
+      type = "ALLOW"
+    }
+
+    priority = 1
+    rule_id  = aws_waf_rule.wafrule.id
+    type     = "REGULAR"
+  }
+}
