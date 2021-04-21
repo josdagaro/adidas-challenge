@@ -9,7 +9,7 @@ jobs:
   state:
     runs-on: ubuntu-latest
     env:
-      TF_BUCKET_NAME: tf-state
+      TF_BUCKET_NAME: tf-state-challenge-ad
       TF_STATE_FILE_NAME: infra.tfstate
     outputs:
       tf_bucket_name: ${{ steps.state.outputs.tf_bucket_name }}
