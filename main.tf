@@ -155,7 +155,7 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     type = "BLOCK"
   }
 
-  rules {
+  rule {
     action {
       type = "ALLOW"
     }
