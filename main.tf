@@ -117,7 +117,7 @@ resource "aws_api_gateway_usage_plan_key" "main" {
   usage_plan_id = aws_api_gateway_usage_plan.this.id
 }
 
-resource "aws_waf_geo_match_set" "geo_match_set" {
+resource "aws_wafregional_geo_match_set" "geo_match_set" {
   provider = aws.virginia
   name     = "geo_match_set"
 
@@ -127,25 +127,25 @@ resource "aws_waf_geo_match_set" "geo_match_set" {
   }
 }
 
-resource "aws_waf_rule" "wafrule" {
+resource "aws_wafregional_rule" "wafrule" {
   provider    = aws.virginia
-  depends_on  = [aws_waf_geo_match_set.geo_match_set]
+  depends_on  = [aws_wafregional_geo_match_set.geo_match_set]
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
 
-  predicates {
-    data_id = aws_waf_geo_match_set.geo_match_set.id
+  predicate {
+    data_id = aws_wafregional_geo_match_set.geo_match_set.id
     negated = false
     type    = "GeoMatch"
   }
 }
 
-resource "aws_waf_web_acl" "waf_acl" {
+resource "aws_wafregional_web_acl" "waf_acl" {
   provider = aws.virginia
 
   depends_on = [
-    aws_waf_geo_match_set.geo_match_set,
-    aws_waf_rule.wafrule,
+    aws_wafregional_geo_match_set.geo_match_set,
+    aws_wafregional_rule.wafrule,
   ]
 
   name        = "tfWebACL"
@@ -161,7 +161,12 @@ resource "aws_waf_web_acl" "waf_acl" {
     }
 
     priority = 1
-    rule_id  = aws_waf_rule.wafrule.id
+    rule_id  = aws_wafregional_rule.wafrule.id
     type     = "REGULAR"
   }
+}
+
+resource "aws_wafregional_web_acl_association" "this" {
+  resource_arn = aws_api_gateway_rest_api.this.arn
+  web_acl_id   = aws_wafregional_web_acl.waf_acl.id
 }
