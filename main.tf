@@ -9,15 +9,12 @@ module "lambda_function_api_sample_java" {
     aws = aws.virginia
   }
 
+  create        = var.create
   function_name = local.app_name
   description   = "apiSampleJava"
-
-  # This configuration is for allowing the creation of this lambda function, 
-  # don't take care about the parameters below.
-  handler     = "index.lambda_handler"
-  runtime     = "python3.8"
-  source_path = "dummy.txt"
-  publish     = true
+  package_type  = "Image"
+  publish       = false
+  image_uri     = "${element(concat(aws_ecr_repository.this.*.repository_url, [""]), 0)}:latest"
 
   tags = {
     Environment = var.env
@@ -26,17 +23,19 @@ module "lambda_function_api_sample_java" {
   allowed_triggers = {
     APIGatewayAny = {
       service    = "apigateway"
-      source_arn = "${aws_api_gateway_rest_api.this.execution_arn}/*/*/*"
+      source_arn = "${element(concat(aws_api_gateway_rest_api.this.*.execution_arn, [""]), 0)}/*/*/*"
     }
   }
 }
 
 resource "aws_ecr_repository" "this" {
+  count    = var.create ? 1 : 0
   provider = aws.virginia
   name     = local.app_name
 }
 
 resource "aws_cloudwatch_log_group" "api_gateway" {
+  count    = var.create ? 1 : 0
   provider = aws.virginia
   name     = "/aws/apigateway/${local.app_name}"
 
@@ -47,6 +46,7 @@ resource "aws_cloudwatch_log_group" "api_gateway" {
 }
 
 data "template_file" "oas" {
+  count    = var.create ? 1 : 0
   template = file("${path.module}/OAS.json")
 
   vars = {
@@ -55,8 +55,9 @@ data "template_file" "oas" {
 }
 
 resource "aws_api_gateway_rest_api" "this" {
+  count    = var.create ? 1 : 0
   provider = aws.virginia
-  body     = data.template_file.oas.rendered
+  body     = element(concat(data.template_file.oas.*.rendered, [""]), 0)
   name     = "challenge"
 
   endpoint_configuration {
@@ -65,11 +66,12 @@ resource "aws_api_gateway_rest_api" "this" {
 }
 
 resource "aws_api_gateway_deployment" "this" {
+  count       = var.create ? 1 : 0
   provider    = aws.virginia
-  rest_api_id = aws_api_gateway_rest_api.this.id
+  rest_api_id = element(concat(aws_api_gateway_rest_api.this.*.id, [""]), 0)
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.this.body))
+    redeployment = sha1(jsonencode(element(concat(aws_api_gateway_rest_api.this.*.body, [""]), 0)))
   }
 
   lifecycle {
@@ -78,19 +80,21 @@ resource "aws_api_gateway_deployment" "this" {
 }
 
 resource "aws_api_gateway_stage" "this" {
+  count         = var.create ? 1 : 0
   provider      = aws.virginia
-  deployment_id = aws_api_gateway_deployment.this.id
-  rest_api_id   = aws_api_gateway_rest_api.this.id
+  deployment_id = element(concat(aws_api_gateway_deployment.this.*.id, [""]), 0)
+  rest_api_id   = element(concat(aws_api_gateway_rest_api.this.*.id, [""]), 0)
   stage_name    = "default"
 }
 
 resource "aws_api_gateway_usage_plan" "this" {
+  count    = var.create ? 1 : 0
   provider = aws.virginia
   name     = "challenge"
 
   api_stages {
-    api_id = aws_api_gateway_rest_api.this.id
-    stage  = aws_api_gateway_stage.this.stage_name
+    api_id = element(concat(aws_api_gateway_rest_api.this.*.id, [""]), 0)
+    stage  = element(concat(aws_api_gateway_stage.this.*.stage_name, [""]), 0)
   }
 
   quota_settings {
@@ -106,18 +110,21 @@ resource "aws_api_gateway_usage_plan" "this" {
 }
 
 resource "aws_api_gateway_api_key" "this" {
+  count    = var.create ? 1 : 0
   provider = aws.virginia
   name     = "key"
 }
 
 resource "aws_api_gateway_usage_plan_key" "main" {
+  count         = var.create ? 1 : 0
   provider      = aws.virginia
-  key_id        = aws_api_gateway_api_key.this.id
+  key_id        = element(concat(aws_api_gateway_api_key.this.*.id, [""]), 0)
   key_type      = "API_KEY"
-  usage_plan_id = aws_api_gateway_usage_plan.this.id
+  usage_plan_id = element(concat(aws_api_gateway_usage_plan.this.*.id, [""]), 0)
 }
 
 resource "aws_wafregional_geo_match_set" "geo_match_set" {
+  count    = var.create ? 1 : 0
   provider = aws.virginia
   name     = "geo_match_set"
 
@@ -128,19 +135,21 @@ resource "aws_wafregional_geo_match_set" "geo_match_set" {
 }
 
 resource "aws_wafregional_rule" "wafrule" {
+  count       = var.create ? 1 : 0
   provider    = aws.virginia
   depends_on  = [aws_wafregional_geo_match_set.geo_match_set]
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
 
   predicate {
-    data_id = aws_wafregional_geo_match_set.geo_match_set.id
+    data_id = element(concat(aws_wafregional_geo_match_set.geo_match_set.*.id, [""]), 0)
     negated = false
     type    = "GeoMatch"
   }
 }
 
 resource "aws_wafregional_web_acl" "waf_acl" {
+  count    = var.create ? 1 : 0
   provider = aws.virginia
 
   depends_on = [
@@ -161,13 +170,13 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     }
 
     priority = 1
-    rule_id  = aws_wafregional_rule.wafrule.id
+    rule_id  = element(concat(aws_wafregional_rule.wafrule.*.id, [""]), 0)
     type     = "REGULAR"
   }
 }
 
 resource "aws_wafregional_web_acl_association" "this" {
   provider     = aws.virginia
-  resource_arn = aws_api_gateway_stage.this.arn
-  web_acl_id   = aws_wafregional_web_acl.waf_acl.id
+  resource_arn = element(concat(aws_api_gateway_stage.this.*.arn, [""]), 0)
+  web_acl_id   = element(concat(aws_wafregional_web_acl.waf_acl.*.id, [""]), 0)
 }
