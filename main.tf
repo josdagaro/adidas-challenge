@@ -9,12 +9,13 @@ module "lambda_function_api_sample_java" {
     aws = aws.virginia
   }
 
-  create        = var.create
-  function_name = local.app_name
-  description   = "apiSampleJava"
-  package_type  = "Image"
-  publish       = false
-  image_uri     = "${element(concat(aws_ecr_repository.this.*.repository_url, [""]), 0)}:latest"
+  create         = var.create
+  create_package = false
+  function_name  = local.app_name
+  description    = "apiSampleJava"
+  package_type   = "Image"
+  publish        = false
+  image_uri      = "${element(concat(aws_ecr_repository.this.*.repository_url, [""]), 0)}:latest"
 
   tags = {
     Environment = var.env
