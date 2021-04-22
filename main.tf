@@ -11,13 +11,9 @@ module "lambda_function_api_sample_java" {
 
   function_name = local.app_name
   description   = "apiSampleJava"
-
-  # This configuration is for allowing the creation of this lambda function, 
-  # don't take care about the parameters below.
-  handler     = "index.lambda_handler"
-  runtime     = "python3.8"
-  source_path = "dummy.txt"
-  publish     = true
+  package_type  = "Image"
+  publish       = false
+  image_uri     = "${aws_ecr_repository.this.repository_url}:latest"
 
   tags = {
     Environment = var.env
