@@ -14,7 +14,7 @@ module "lambda_function_api_sample_java" {
   function_name  = local.app_name
   description    = "apiSampleJava"
   package_type   = "Image"
-  publish        = false
+  publish        = true
   image_uri      = "${element(concat(aws_ecr_repository.this.*.repository_url, [""]), 0)}:latest"
 
   tags = {
@@ -38,7 +38,7 @@ resource "aws_ecr_repository" "this" {
 }
 
 module "ecr_image" {
-  source             = "github.com/josdagaro/terraform-aws-ecr-image?ref=v1.0.2"
+  source             = "github.com/josdagaro/terraform-aws-ecr-image?ref=v1.0.6"
   dockerfile_dir     = "."
   ecr_repository_url = element(concat(aws_ecr_repository.this.*.repository_url, [""]), 0)
 }
