@@ -29,6 +29,12 @@ jobs:
             -backend-config="key=$TF_STATE_FILE_NAME" \
             -backend-config="region=us-east-1" \
             -backend-config="encrypt=true"
+      - name: setup aws-cli
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
       - name: terraform apply
         id: apply
         run: terraform apply -input=false -compact-warnings -var-file=pr.tfvars -auto-approve
