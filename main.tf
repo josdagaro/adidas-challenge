@@ -38,7 +38,7 @@ resource "aws_ecr_repository" "this" {
 }
 
 module "ecr_image" {
-  source             = "github.com/byu-oit/terraform-aws-ecr-image?ref=v1.0.1"
+  source             = "github.com/josdagaro/terraform-aws-ecr-image?ref=v1.0.2"
   dockerfile_dir     = "."
   ecr_repository_url = element(concat(aws_ecr_repository.this.*.repository_url, [""]), 0)
 }
