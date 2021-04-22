@@ -15,7 +15,7 @@ module "lambda_function_api_sample_java" {
   description    = "apiSampleJava"
   package_type   = "Image"
   publish        = false
-  image_uri      = "public.ecr.aws/lambda/nodejs:12"
+  image_uri      = "docker.io/library/hello-world:latest"
 
   tags = {
     Environment = var.env
