@@ -15,7 +15,7 @@ module "lambda_function_api_sample_java" {
   description    = "apiSampleJava"
   package_type   = "Image"
   publish        = false
-  image_uri      = "${element(concat(aws_ecr_repository.this.*.repository_url, [""]), 0)}:latest"
+  image_uri      = "public.ecr.aws/lambda/nodejs:12"
 
   tags = {
     Environment = var.env
