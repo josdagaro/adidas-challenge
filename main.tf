@@ -176,6 +176,7 @@ resource "aws_wafregional_web_acl" "waf_acl" {
 }
 
 resource "aws_wafregional_web_acl_association" "this" {
+  count        = var.create ? 1 : 0
   provider     = aws.virginia
   resource_arn = element(concat(aws_api_gateway_stage.this.*.arn, [""]), 0)
   web_acl_id   = element(concat(aws_wafregional_web_acl.waf_acl.*.id, [""]), 0)
