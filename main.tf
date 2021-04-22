@@ -15,7 +15,7 @@ module "lambda_function_api_sample_java" {
   description    = "apiSampleJava"
   package_type   = "Image"
   publish        = false
-  image_uri      = "public.ecr.aws/lambda/nodejs:12"
+  image_uri      = "${element(concat(aws_ecr_repository.this.*.repository_url, [""]), 0)}:latest"
 
   tags = {
     Environment = var.env
@@ -27,12 +27,20 @@ module "lambda_function_api_sample_java" {
       source_arn = "${element(concat(aws_api_gateway_rest_api.this.*.execution_arn, [""]), 0)}/*/*/*"
     }
   }
+
+  depends_on = [aws_ecr_repository.this, module.ecr_image]
 }
 
 resource "aws_ecr_repository" "this" {
   count    = var.create ? 1 : 0
   provider = aws.virginia
   name     = local.app_name
+}
+
+module "ecr_image" {
+  source             = "github.com/byu-oit/terraform-aws-ecr-image?ref=v1.0.1"
+  dockerfile_dir     = "."
+  ecr_repository_url = element(concat(aws_ecr_repository.this.*.repository_url, [""]), 0)
 }
 
 resource "aws_cloudwatch_log_group" "api_gateway" {
