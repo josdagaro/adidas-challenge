@@ -107,7 +107,7 @@ resource "aws_api_gateway_usage_plan" "this" {
   }
 
   quota_settings {
-    limit  = 20
+    limit  = 50
     offset = 2
     period = "WEEK"
   }
